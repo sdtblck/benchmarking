@@ -5,6 +5,8 @@ from pathlib import Path
 import random
 import subprocess
 import yaml
+import re 
+import json 
 
 def get_unused_port():
     # sometimes we encounter the error "TCP address in use", and the killall script doesn't work that well
@@ -28,6 +30,8 @@ def get_num_gpus():
     else:
         return torch.cuda.device_count()
 
+def get_gpu_memory_mb():
+    return torch.cuda.get_device_properties(0).total_memory / (1024 * 1024)
 
 def data_dir_is_shared(data_dir, verbose=False):
     if not Path("/job/hosts").exists():
@@ -67,6 +71,7 @@ def data_dir_is_shared(data_dir, verbose=False):
     
     return ret
 
+MEMORY_REQ_MB = {"1B": 40536}
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -113,9 +118,17 @@ if __name__ == "__main__":
     subprocess.run(f"bash ~/gpt-neox/tools/sync_cmd.sh 'cd ~/gpt-neox/; python3 prepare_data.py -d {args.data_dir}'", shell=True)
 
     for test in args.tests:
+        
+        # check we have enough gpu memory
+        memory_req = MEMORY_REQ_MB.get(test, None)
+        if memory_req is not None:
+            mem = get_gpu_memory_mb()
+            assert mem > memory_req, f"The test {test} requires {memory_req}MB of GPU RAM, but you only have {mem}MB available."
+
         test_config = Path("benchmarking_configs") / f"{test}.yml"
         tmp_path = Path.home() / "gpt-neox" / "configs" / "tmp.yml"
-        log_path = Path.home() / "gpt-neox" / ".tmp_log.txt"
+        log_path = (Path.home() / ".tmp_log.txt").resolve()
+        save_path = f"{args.outpath}_{get_num_gpus()}_gpus_{test}.json".strip("_")
 
         # make runtime modifications to config
         data_dir = Path(args.data_dir)
@@ -142,3 +155,16 @@ if __name__ == "__main__":
         subprocess.run(f"cd ~/gpt-neox/; ./deepy.py train.py configs/tmp.yml | tee {str(log_path)}", shell=True)
 
         # parse average TFLOPS from logs, save to json
+        with open(log_path) as f:
+            logs = f.read()
+        
+        flops = re.findall(r'approx flops per GPU: (.*?)TFLOPS', logs)
+        flops = [float(f) for f in flops]
+        avg_flops = sum(flops) / len(flops)
+        print('\n\n')
+        print(f'AVERAGE FLOPS: {avg_flops} TFLOPS')
+
+        with open(save_path, 'w') as f:
+            json.dump({"average_tflops": avg_flops, "all_tflops": flops}, f)
+
+        print(f'saved to {save_path}')
