@@ -1,19 +1,3 @@
-"""
-bash ~/gpt-neox/tools/sync_cmd.sh 'git clone https://github.com/NVIDIA/nccl-tests/'
-cd nccl-tests
-
-make -j8 MPI=1 MPI_HOME=/usr/local/mpi CUDA_HOME=/usr/local/cuda NCCL_HOME=/usr
-
-# sync build folder
-bash ~/gpt-neox/tools/syncdir.sh build
-
-# test on 8 gpus:
-./build/all_reduce_perf -b 8 -e 2G -f 2 -g 8 > 8_gpu_allreduce.txt
-
-# test on all 12 nodes:
-mpirun --hostfile /job/hostfile ./build/all_reduce_perf -b 8 -e 2G -f 2
-"""
-
 import subprocess
 import os
 from pathlib import Path
