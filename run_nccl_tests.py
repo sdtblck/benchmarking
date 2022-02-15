@@ -70,16 +70,16 @@ assert Path("/job/hosts").exists(), "/job/hostsdoes not exist"
 
 # clone tests repo in parallel across all nodes
 subprocess.run(
-    f"cd ~; bash ~/gpt-neox/tools/sync_cmd.sh 'git clone https://github.com/NVIDIA/nccl-tests/'"
+    f"cd ~; bash ~/gpt-neox/tools/sync_cmd.sh 'git clone https://github.com/NVIDIA/nccl-tests/'", shell=True
 )
 
 # run makefile
 subprocess.run(
-    f"cd ~/nccl-tests; make -j8 MPI=1 MPI_HOME={str(MPI_HOME)} CUDA_HOME={str(CUDA_HOME)} NCCL_HOME={str(NCCL_HOME)}"
+    f"cd ~/nccl-tests; make -j8 MPI=1 MPI_HOME={str(MPI_HOME)} CUDA_HOME={str(CUDA_HOME)} NCCL_HOME={str(NCCL_HOME)}", shell=True
 )
 
 # sync build folder
-subprocess.run(f"cd ~/nccl-tests; bash ~/gpt-neox/tools/syncdir.sh build")
+subprocess.run(f"cd ~/nccl-tests; bash ~/gpt-neox/tools/syncdir.sh build", shell=True)
 
 # make output path parent if it doesn't exists
 outpath.parent.mkdir(exist_ok=True, parents=True)
@@ -89,7 +89,7 @@ for test in args.tests:
     ngpus = torch.cuda.device_count() if test["ngpus"] == "local" else get_num_gpus()
     out_path = f"{str(out_path)}_{n_gpus}_gpus_{test}.txt"
     try:
-        subprocess.run(f"{cmd} > {out_path}")
+        subprocess.run(f"{cmd} > {out_path}", shell=True)
     except Exception:
         # save traceback to outpath if something goes wrong
         exception = traceback.format_exc()
