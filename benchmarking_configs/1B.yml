@@ -48,7 +48,7 @@
     },
 
   # misc. training settings
-  "train-iters": 50,
+  "train-iters": 100,
   "lr-decay-iters": 320000,
   "distributed-backend": "nccl",
   "lr-decay-style": "cosine",
