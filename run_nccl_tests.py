@@ -69,8 +69,8 @@ subprocess.run(f"cd ~/nccl-tests; bash ~/gpt-neox/tools/syncdir.sh build", shell
 outpath.parent.mkdir(exist_ok=True, parents=True)
 
 for test in args.tests:
-    cmd = test["cmd"]
-    ngpus = torch.cuda.device_count() if test["ngpus"] == "local" else get_num_gpus()
+    cmd = TEST_META[test]["cmd"]
+    ngpus = torch.cuda.device_count() if TEST_META[test]["ngpus"] == "local" else get_num_gpus()
     out_path = f"{str(out_path)}_{n_gpus}_gpus_{test}.txt"
     try:
         subprocess.run(f"{cmd} > {out_path}", shell=True)
@@ -79,3 +79,4 @@ for test in args.tests:
         exception = traceback.format_exc()
         with open(out_path, "w") as f:
             f.write(exception) 
+
