@@ -11,11 +11,11 @@ NCCL_HOME = os.getenv("NCCL_HOME", "/usr")
 TEST_META = {
     "allreduce": {
         "cmd": "mpirun --hostfile /job/hostfile ./build/all_reduce_perf -b 8 -e 2G -f 2",
-        "ngpus": "local",
+        "ngpus": "all",
     },
     "allreduce_single_node": {
         "cmd": "./build/all_reduce_perf -b 8 -e 2G -f 2 -g 8",
-        "ngpus": "all",
+        "ngpus": "local",
     },
 }
 
@@ -97,7 +97,9 @@ for test in args.tests:
     )
     try:
         print(f"Running test and saving output to {test_out_path}")
-        subprocess.run(f"cd ~/nccl-tests; {cmd} | tee {test_out_path}", shell=True)
+        cmd = f"cd ~/nccl-tests; {cmd} | tee {test_out_path}"
+        print(f'RUNNING: {cmd}")
+        subprocess.run(cmd, shell=True)
     except Exception:
         # save traceback to outpath if something goes wrong
         exception = traceback.format_exc()
