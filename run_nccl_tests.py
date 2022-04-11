@@ -98,7 +98,7 @@ for test in args.tests:
     try:
         print(f"Running test and saving output to {test_out_path}")
         cmd = f"cd ~/nccl-tests; {cmd} | tee {test_out_path}"
-        print(f'RUNNING: {cmd}")
+        print(f'RUNNING: {cmd}')
         subprocess.run(cmd, shell=True)
     except Exception:
         # save traceback to outpath if something goes wrong
